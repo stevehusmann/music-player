@@ -13,22 +13,28 @@ var createSongRow = function (songNumber, songName, songLength) {
     if (currentlyPlayingSongNumber !== null) {
       var currentlyPlayingCell = $('.song-item-number[data-song-number="' + currentlyPlayingSongNumber + '"]');
       currentlyPlayingCell.html(currentlyPlayingSongNumber);
-      currentSoundFile.stop();
+
     }
   
     // 2. There is a song currently playing, but a different one was clicked to play
     if (clickedSongNumber !== currentlyPlayingSongNumber){
       currentlyPlayingSongNumber = clickedSongNumber;
+      
       setSong(currentlyPlayingSongNumber);
+      
       currentSoundFile.play();
+      
       $(this).html(pauseButtonTemplate);
   
     // 3. The currently playing song was clicked
     } else {
-      currentlyPlayingSongNumber = null;
-      currentSoundFile.pause();
-      currentSoundFile = null;
-      $(this).html(clickedSongNumber);
+      if (currentSoundFile.isPaused()) {
+        currentSoundFile.play();
+        $(this).html(pauseButtonTemplate);
+      } else {
+        currentSoundFile.pause();
+        $(this).html(playButtonTemplate);
+      }
     }
   };
 
@@ -69,11 +75,13 @@ var setCurrentAlbum = function(album) {
   var $albumReleaseInfo = $('.album-view-release-info');
   var $albumImage = $('.album-cover-art');
   var $albumSongList = $('.album-view-song-list');
+  var $songArtist = $('.artist-name');
 
   $albumTitle.text(album.title);
   $albumArtist.text(album.artist);
   $albumReleaseInfo.text(album.year + ' ' + album.label);
   $albumImage.attr('src', album.albumArtUrl);
+  $songArtist.html(album.artist);
 
   $albumSongList.empty();
 
@@ -85,10 +93,19 @@ var setCurrentAlbum = function(album) {
 
 var setSong = function (songNumber) {
   var songURL = currentAlbum.songs[songNumber - 1].audioUrl;
-  
+  console.log('stop');
+  if (currentSoundFile) {
+    currentSoundFile.stop();
+  }
+  var songName = currentAlbum.songs[songNumber - 1].title;
+  var $songName = $('.song-name');
+
+
+  $songName.html(songName);
+
   currentSoundFile = new buzz.sound(songURL, {
-    formats: [ 'mp3' ],
-    preload: true,
+  formats: [ 'mp3' ],
+  preload: true,
   });
 };
 
